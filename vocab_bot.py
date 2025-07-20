@@ -21,42 +21,33 @@ vocab = {
 }
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Halo! Ketik /quiz untuk memulai kuis kosakata.")
-
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Perintah:\n/start - Mulai bot\n/quiz - Kuis\n/answer [jawaban] - Jawabanmu")
+    await update.message.reply_text("Halo! Ketik /quiz untuk mulai kuis.")
 
 async def quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
     word, meaning = random.choice(list(vocab.items()))
-    context.user_data["current_word"] = word
-    await update.message.reply_text(f"Apa arti dari kata: '{word}'?\n(Jawab pakai: /answer ... )")
+    context.user_data["word"] = word
+    await update.message.reply_text(f"Apa arti dari '{word}'? (Gunakan /answer)")
 
 async def answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
-        await update.message.reply_text("Contoh: /answer help")
+        await update.message.reply_text("Ketik /answer jawabanmu")
         return
 
     user_input = ' '.join(context.args).strip().lower()
-    current_word = context.user_data.get("current_word")
-
+    current_word = context.user_data.get("word")
     if not current_word:
-        await update.message.reply_text("Ketik /quiz dulu untuk memulai.")
+        await update.message.reply_text("Gunakan /quiz dulu.")
         return
 
     correct = vocab[current_word].lower()
     if user_input == correct:
         await update.message.reply_text("✅ Benar!")
     else:
-        await update.message.reply_text(f"❌ Salah. Jawaban yang benar: {vocab[current_word]}")
+        await update.message.reply_text(f"❌ Salah. Jawaban benar: {vocab[current_word]}")
+    context.user_data["word"] = None
 
-    context.user_data["current_word"] = None
-
-# --- START ---
 app = ApplicationBuilder().token(TOKEN).build()
 app.add_handler(CommandHandler("start", start))
-app.add_handler(CommandHandler("help", help_command))
 app.add_handler(CommandHandler("quiz", quiz))
 app.add_handler(CommandHandler("answer", answer))
-
-print("✅ Bot is running...")
 app.run_polling()
